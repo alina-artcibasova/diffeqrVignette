@@ -1,0 +1,123 @@
+---
+title: "diffeqr vignette"
+author: "darthaline"
+date: "21 Aug 2020"
+output:
+  html_notebook:
+    toc: true
+---
+
+# About
+
+A notebook showcasing the error for [diffeqr CRAN Vignette for 1D ODE](https://cran.r-project.org/web/packages/diffeqr/vignettes/ode.html)
+
+# Packages setup
+
+```{r ODE}
+Sys.setenv(LANG = "en")
+
+library(diffeqr)
+library(JuliaCall)
+
+julia_setup(JULIA_HOME="C:/Users/alinaa/AppData/Local/Julia 1.5.0/bin")
+diffeqr::diffeq_setup()
+dyn.load("C:/Users/alinaa/AppData/Local/Julia 1.5.0/bin/libopenlibm.DLL")
+```
+# Session info
+
+```{r sessionInfo}
+sessionInfo()
+```
+
+# Original vignette
+
+```{r VignetteOriginal}
+f <- function(u,p,t) {
+  return(1.01*u)
+}
+
+u0 = 1/2
+tspan <- list(0.0,1.0)
+
+sol = diffeqr::ode.solve(f,u0,tspan)
+
+plot(sol$t,sol$u,"l")
+
+```
+
+# dlekshmi version
+
+```{r VignetteModifiedFails1}
+f <- JuliaCall::julia_eval("
+function f(du,u,p,t)
+  du = 1.01*u
+end")
+
+tspan=list(0.0,1.0)
+u0=c(0.5)
+sol = diffeqr::ode.solve('f',u0,tspan)
+
+```
+
+# dot edit
+
+```{r VignetteModifiedFails2}
+f <- JuliaCall::julia_eval("
+function f(du,u,p,t)
+  du .= 1.01.*u
+end")
+
+tspan=list(0.0,1.0)
+u0=c(0.5)
+sol = diffeqr::ode.solve('f',u0,tspan)
+
+```
+
+# Tsit5 edit
+
+```{r VignetteModifiedFails3}
+f <- JuliaCall::julia_eval("
+function f(du,u,p,t)
+  du = 1.01*u
+end")
+
+tspan=list(0.0,1.0)
+u0=c(0.5)
+sol = diffeqr::ode.solve('f',u0,tspan,alg="Tsit5()")
+
+```
+
+# Tsit5 and dot edit
+
+```{r VignetteModifiedFails4}
+f <- JuliaCall::julia_eval("
+function f(du,u,p,t)
+  du .= 1.01.*u
+end")
+
+tspan=list(0.0,1.0)
+u0=c(0.5)
+sol = diffeqr::ode.solve('f',u0,tspan,alg="Tsit5()")
+```
+
+# Extra variable version from dlekshmi that works
+
+```{r VignetteModifiedWorks}
+#f <- function(u,p,t) {
+#  return(1.01*u)
+#}
+
+f <- JuliaCall::julia_eval("
+function f(du,u,p,t)
+  du[1] = 1.01*u[1]
+  du[2] = 0
+end")
+
+u0 = c(1/2, 0)
+tspan <- list(0.0,1.0)
+
+sol = diffeqr::ode.solve('f',u0,tspan)
+
+plot(sol$t,sol$u[,1],"l")
+
+```
