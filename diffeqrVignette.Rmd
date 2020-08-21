@@ -121,3 +121,21 @@ sol = diffeqr::ode.solve('f',u0,tspan)
 plot(sol$t,sol$u[,1],"l")
 
 ```
+# Extra variable with R function definition that works
+
+```{r VignetteModifiedRfuncWorks}
+f <- function(u,p,t) {
+  du1 = 1.01*u[1]
+  du2 = 0
+  
+  return(c(du1, du2))
+}
+
+u0 = c(1/2, 0)
+tspan <- list(0.0,1.0)
+
+sol = diffeqr::ode.solve('f',u0,tspan)
+
+plot(sol$t,sol$u[,1],"l")
+
+```
